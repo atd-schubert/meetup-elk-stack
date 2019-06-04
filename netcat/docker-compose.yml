@@ -1,0 +1,33 @@
+version: "3"
+
+services:
+  elasticsearch:
+    image: elasticsearch:6.8.0
+    expose:
+      - 9200
+      - 9300
+    restart: always
+
+  logstash:
+    image: logstash:6.8.0
+    depends_on:
+      - elasticsearch
+    command: ["-e", 'input { tcp { port => 9500 codec => line } } output { elasticsearch { index => "meetup-netcat-%{+YYYY.MM.dd}" hosts => ["elasticsearch:9200"] } }']
+    expose:
+      - 9500
+    ports:
+      - "9500:9500"
+    restart: always
+
+  kibana:
+    image: kibana:6.8.0
+    expose:
+      - 5601
+    ports:
+      - 127.0.0.1:5601:5601
+    # volumes:
+    #   - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+    depends_on:
+      - elasticsearch
+    restart: always
+
